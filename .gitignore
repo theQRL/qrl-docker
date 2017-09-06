@@ -1,0 +1,8 @@
+volumes/node1/.qrl/data
+volumes/node1/.qrl/wallet
+volumes/node2/.qrl/data
+volumes/node2/.qrl/wallet
+volumes/node3/.qrl/data
+volumes/node3/.qrl/wallet
+volumes/node4/.qrl/data
+volumes/node4/.qrl/wallet
