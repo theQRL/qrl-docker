@@ -3,8 +3,9 @@
 # Enable this once we deploy through pip packages
 #RUN pip install -i https://testpypi.python.org/pypi --extra-index-url https://pypi.python.org/simple/  --upgrade qrl
 
-git clone https://github.com/theQRL/QRL.git /root/QRL
-GITHASH=$(git -C ~/crypto/QRL/ rev-parse HEAD)
+rm -rf /root/QRL
+git clone -b xmss_fixes https://github.com/jleni/QRL.git /root/QRL
+GITHASH=$(git -C /root/QRL/ rev-parse HEAD)
 pip install -r /root/QRL/requirements.txt
 
 echo "GitRepo: " $GITHASH
