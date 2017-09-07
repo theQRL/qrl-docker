@@ -4,7 +4,7 @@
 #RUN pip install -i https://testpypi.python.org/pypi --extra-index-url https://pypi.python.org/simple/  --upgrade qrl
 
 rm -rf /root/QRL
-git clone -b xmss_fixes https://github.com/jleni/QRL.git /root/QRL
+git clone -b testnet https://github.com/jleni/QRL.git /root/QRL
 GITHASH=$(git -C /root/QRL/ rev-parse HEAD)
 pip install -r /root/QRL/requirements.txt
 

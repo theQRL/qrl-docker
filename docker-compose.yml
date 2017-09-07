@@ -3,7 +3,7 @@ services:
   node:
     build: 
       context: .
-      dockerfile: ./environments/Dockerfile.qrlnode_master
+      dockerfile: ./environments/Dockerfile.qrlnode_master${QRL_VARIANT}
     image: qrlnode_master
     ports:
     - "127.0.0.1:28001:18888"
@@ -15,7 +15,7 @@ services:
   node2:
     build: 
       context: .
-      dockerfile: ./environments/Dockerfile.qrlnode_master
+      dockerfile: ./environments/Dockerfile.qrlnode_master${QRL_VARIANT}
     image: qrlnode_master
     ports:
     - "127.0.0.1:28002:18888"
@@ -27,7 +27,7 @@ services:
   node3:
     build: 
       context: .
-      dockerfile: ./environments/Dockerfile.qrlnode_master
+      dockerfile: ./environments/Dockerfile.qrlnode_master${QRL_VARIANT}
     image: qrlnode_master
     ports:
     - "127.0.0.1:28003:18888"
@@ -35,3 +35,27 @@ services:
     - "127.0.0.1:27003:18080"
     volumes:
     - ./volumes/node3/.qrl:/root/.qrl
+
+  node4:
+    build: 
+      context: .
+      dockerfile: ./environments/Dockerfile.qrlnode_master${QRL_VARIANT}
+    image: qrlnode_master
+    ports:
+    - "127.0.0.1:28004:18888"
+    - "127.0.0.1:22004:12000"
+    - "127.0.0.1:27004:18080"
+    volumes:
+    - ./volumes/node4/.qrl:/root/.qrl
+
+  node5:
+    build: 
+      context: .
+      dockerfile: ./environments/Dockerfile.qrlnode_master${QRL_VARIANT}
+    image: qrlnode_master
+    ports:
+    - "127.0.0.1:28005:18888"
+    - "127.0.0.1:22005:12000"
+    - "127.0.0.1:27005:18080"
+    volumes:
+    - ./volumes/node5/.qrl:/root/.qrl
