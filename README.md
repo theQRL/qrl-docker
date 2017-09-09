@@ -78,12 +78,6 @@ replace `qrldocker_node1_1` with the node name. You can get them all with `docke
 docker-compose down
 ```
 
-## Attach to the container
-
-Run `./connect.sh`
-
-At the moment, the scripts start the container as `node1`. If you feel adventurous, you can modify and run several containers at the same time, etc.
-
 ## Flushing / cleaning everything
 
 **Flush will remove everything !!!! Be careful if you have other containers** !!!
