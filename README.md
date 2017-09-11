@@ -28,6 +28,19 @@ git clone https://github.com/jleni/qrl_docker`
 cd qrl_docker
 ```
 
+## Getting latest and running
+
+```
+docker-compose build; docker-compose up
+```
+
+to stop:
+```
+docker-compose down
+```
+
+# I want more details! :)
+
 ## Custom Configuration (optional)
 
 The configuration file for docker-compose is `docker-compose.yml`
