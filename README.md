@@ -15,6 +15,8 @@ Follow the corresponding instructions:
 |OSX     | https://docs.docker.com/docker-for-mac/install/ | 
 |||
 
+>_Warning: there have been some problems when using Docker in Raspberry PIs. Until I get one to play with and prepare some detailed instructions, using docker in RPI3s is not supported or recommended._
+
 Install docker compose
 
 `pip install docker-compose`
@@ -24,7 +26,7 @@ Install docker compose
 Get the docker scripts running this:
 
 ```
-git clone https://github.com/jleni/qrl_docker`
+git clone https://github.com/jleni/qrl_docker
 cd qrl_docker
 ```
 
