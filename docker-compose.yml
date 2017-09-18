@@ -1,61 +1,21 @@
-version: '3'
+version: '3.3'
 services:
   node:
     build: 
       context: .
-      dockerfile: ./environments/Dockerfile.qrlnode_master${QRL_VARIANT}
+      dockerfile: ./environments/Dockerfile.qrlnode
+    environment:
+      - BOOT_PHASE=${BOOT_PHASE}
+      - DOCKER_UID=${DOCKER_UID}
+      - DOCKER_GID=${DOCKER_GID}
     image: qrlnode_master
-    ports:
-    - "127.0.0.1:28001:18888"
-    - "127.0.0.1:22001:12000"
-    - "127.0.0.1:27001:18080"
+    # ports:
+    # - "127.0.0.1:28001:18888"
+    # - "127.0.0.1:22001:12000"
+    # - "127.0.0.1:27001:18080"
     volumes:
-    - ./volumes/node1/.qrl:/root/.qrl
-
-  node2:
-    build: 
-      context: .
-      dockerfile: ./environments/Dockerfile.qrlnode_master${QRL_VARIANT}
-    image: qrlnode_master
-    ports:
-    - "127.0.0.1:28002:18888"
-    - "127.0.0.1:22002:12000"
-    - "127.0.0.1:27002:18080"
-    volumes:
-    - ./volumes/node2/.qrl:/root/.qrl
-
-  node3:
-    build: 
-      context: .
-      dockerfile: ./environments/Dockerfile.qrlnode_master${QRL_VARIANT}
-    image: qrlnode_master
-    ports:
-    - "127.0.0.1:28003:18888"
-    - "127.0.0.1:22003:12000"
-    - "127.0.0.1:27003:18080"
-    volumes:
-    - ./volumes/node3/.qrl:/root/.qrl
-
-  node4:
-    build: 
-      context: .
-      dockerfile: ./environments/Dockerfile.qrlnode_master${QRL_VARIANT}
-    image: qrlnode_master
-    ports:
-    - "127.0.0.1:28004:18888"
-    - "127.0.0.1:22004:12000"
-    - "127.0.0.1:27004:18080"
-    volumes:
-    - ./volumes/node4/.qrl:/root/.qrl
-
-  node5:
-    build: 
-      context: .
-      dockerfile: ./environments/Dockerfile.qrlnode_master${QRL_VARIANT}
-    image: qrlnode_master
-    ports:
-    - "127.0.0.1:28005:18888"
-    - "127.0.0.1:22005:12000"
-    - "127.0.0.1:27005:18080"
-    volumes:
-    - ./volumes/node5/.qrl:/root/.qrl
+    - ./testnet_vols:/testnet_vols
+    - ./scripts:/root/scripts
+    - /etc/group:/etc/group:ro
+    - /etc/passwd:/etc/passwd:ro
+    

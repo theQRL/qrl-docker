@@ -1,7 +1,38 @@
 #!/bin/sh
-# Collect addresses
-QRL_VARIANT=_boot1 docker-compose build; docker-compose up
+
+export DOCKER_UID=$( id -u ${USER} )
+export DOCKER_GID=$( id -g ${USER} )
+
+echo "****************************************************************"
+echo "****************************************************************"
+echo "                     FLUSHING EVERYTHING"
+echo "****************************************************************"
+echo "****************************************************************"
+rm -r testnet_vols/*
+
+echo "****************************************************************"
+echo "****************************************************************"
+echo "                     BUILDING CONTAINERS"
+echo "****************************************************************"
+echo "****************************************************************"
+export BOOT_PHASE=build
+docker-compose build
+
+echo "****************************************************************"
+echo "****************************************************************"
+echo "                       BOOTSTRAPPING"
+echo "****************************************************************"
+echo "****************************************************************"
+export BOOT_PHASE=bootstrap
+docker-compose up --scale node=5
 
 # Get Addresses and prepare genesis block
-python ./testnet/collect_wallets.py
-QRL_VARIANT=_boot2 docker-compose build; docker-compose up
+python ./scripts/collect_wallets.py
+
+echo "****************************************************************"
+echo "****************************************************************"
+echo "                       STARTING TESTNET"
+echo "****************************************************************"
+echo "****************************************************************"
+export BOOT_PHASE=start
+docker-compose up --scale node=5
