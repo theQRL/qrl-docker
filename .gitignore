@@ -16,3 +16,4 @@ volumes/node4/\.qrl/output
 volumes/node5/\.qrl/output
 
 testnet/genesis\.yml
+testnet_vols/*

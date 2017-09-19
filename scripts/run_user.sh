@@ -10,9 +10,11 @@ REPO=https://github.com/jleni/QRL.git
 REPO_BRANCH=testnet
 git clone -b ${REPO_BRANCH} ${REPO} ${HOME}/QRL
 GITHASH=$(git -C ${HOME}/QRL/ rev-parse HEAD)
-#echo "GitRepo: " $GITHASH
+echo "GitRepo: " $GITHASH
 
-# pip3 install -r ${HOME}/QRL/requirements.txt
+pip3 install -r ${HOME}/QRL/requirements.txt > /dev/null
+
+
 
 case "${BOOT_PHASE}" in
         bootstrap)
@@ -21,15 +23,13 @@ case "${BOOT_PHASE}" in
             ;;
          
         start)
-            echo "Start Nodes"
-
             # # qrl binds to 127.0.0.1 so we need some special redirection here
             # socat -d tcp-listen:18888,reuseaddr,fork tcp:127.0.0.1:8888 &
             # socat -d tcp-listen:12000,reuseaddr,fork tcp:127.0.0.1:2000 &
             # socat -d tcp-listen:18080,reuseaddr,fork tcp:127.0.0.1:8080 &
 
             cp ${HOME}/genesis.yml ${HOME}/QRL/qrl/core/genesis.yml
-            python3 ${HOME}/QRL/start_qrl.py
+            python3 ${HOME}/QRL/start_qrl.py -l DEBUG
             ;;
         *)
             echo $"Usage: $0 {bootstrap|start}"
