@@ -7,7 +7,7 @@ rm -rf ${HOME}/QRL
 #RUN pip install -i https://testpypi.python.org/pypi --extra-index-url https://pypi.python.org/simple/  --upgrade qrl
 
 REPO=https://github.com/jleni/QRL.git
-REPO_BRANCH=testnet
+REPO_BRANCH=new_qrllib
 git clone -b ${REPO_BRANCH} ${REPO} ${HOME}/QRL
 GITHASH=$(git -C ${HOME}/QRL/ rev-parse HEAD)
 echo "GitRepo: " $GITHASH
@@ -23,6 +23,12 @@ case "${BOOT_PHASE}" in
             ;;
          
         start)
+            if [ "$EASYNAME" != "/qrldocker_node_1" ]
+            then
+                echo "Waiting for node 1"
+                sleep 20
+            fi
+
             # # qrl binds to 127.0.0.1 so we need some special redirection here
             # socat -d tcp-listen:18888,reuseaddr,fork tcp:127.0.0.1:8888 &
             # socat -d tcp-listen:12000,reuseaddr,fork tcp:127.0.0.1:2000 &

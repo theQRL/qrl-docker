@@ -2,10 +2,10 @@
 export USERNAME=$(awk -v val=1000 -F ":" '$3==val{print $1}' /etc/passwd)
 mkdir -p /home/${USERNAME}
 
-EASY_NAME=$(python3 /root/scripts/get_name.py)
-echo "EasyName: ${EASY_NAME}"
+EASYNAME=$(python3 /root/scripts/get_name.py)
+echo "EasyName: ${EASYNAME}"
 
-VOLUME_NAME="/testnet_vols${EASY_NAME}"
+VOLUME_NAME="/testnet_vols${EASYNAME}"
 
 cp /root/scripts/run_user.sh  /home/${USERNAME}/run_user.sh
 mkdir -p ${VOLUME_NAME}
@@ -18,4 +18,4 @@ chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
 chown -R ${USERNAME}:${USERNAME} ${VOLUME_NAME}
 chmod -R a+rwx /home/${USERNAME}
 
-sudo BOOT_PHASE=${BOOT_PHASE} -i -u ${USERNAME} /home/${USERNAME}/run_user.sh
+sudo BOOT_PHASE=${BOOT_PHASE} EASYNAME=${EASYNAME} -i -u ${USERNAME} /home/${USERNAME}/run_user.sh

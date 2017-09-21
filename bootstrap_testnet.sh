@@ -24,10 +24,10 @@ echo "                       BOOTSTRAPPING"
 echo "****************************************************************"
 echo "****************************************************************"
 export BOOT_PHASE=bootstrap
-docker-compose up --scale node=5
+docker-compose up --scale node=15
 
 # Get Addresses and prepare genesis block
-python ./scripts/collect_wallets.py
+python3 ./scripts/collect_wallets.py
 
 echo "****************************************************************"
 echo "****************************************************************"
@@ -35,4 +35,4 @@ echo "                       STARTING TESTNET"
 echo "****************************************************************"
 echo "****************************************************************"
 export BOOT_PHASE=start
-docker-compose up --scale node=5
+docker-compose up --scale node=15

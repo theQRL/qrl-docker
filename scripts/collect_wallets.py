@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from collections import OrderedDict
 import glob
 
@@ -16,5 +16,7 @@ with open('./scripts/genesis.yml', 'w') as f:
     f.write("genesis_info:\n")
     for w in wallets:
         f.write("  {} : {}\n".format(w, 10000))
+
+print(wallets)
 
 # determine winner??
