@@ -12,8 +12,9 @@ git clone -b ${REPO_BRANCH} ${REPO} ${HOME}/QRL
 GITHASH=$(git -C ${HOME}/QRL/ rev-parse HEAD)
 echo "GitRepo: " $GITHASH
 
-pip3 install -r ${HOME}/QRL/requirements.txt > /dev/null
+sudo pip3 install -r ${HOME}/QRL/requirements.txt > /dev/null
 
+ifconfig | perl -nle 's/dr:(\S+)/print $1/e'
 
 
 case "${BOOT_PHASE}" in
@@ -26,7 +27,7 @@ case "${BOOT_PHASE}" in
             if [ "$EASYNAME" != "/qrldocker_node_1" ]
             then
                 echo "Waiting for node 1"
-                sleep 20
+                sleep 2
             fi
 
             # # qrl binds to 127.0.0.1 so we need some special redirection here

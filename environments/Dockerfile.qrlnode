@@ -2,6 +2,7 @@
 FROM ubuntu:16.04
 RUN apt-get update
 RUN apt-get -y install ca-certificates curl
+RUN apt-get -y install net-tools
 
 # Prepare pip
 RUN apt-get -y install python3 python3-pip python3-dev git sudo
@@ -10,7 +11,7 @@ RUN apt-get -y install build-essential
 RUN apt-get -y install swig3.0
 
 RUN pip3 install --upgrade pip
-RUN pip3 install docker-py
+RUN pip3 install docker
 
 # Save time by preinstalling 
 RUN pip3 install jsonpickle>=0.9.5 leveldb==0.20 statistics>=1.0.3.5 ntplib>=0.3.3 
@@ -18,7 +19,7 @@ RUN pip3 install Twisted==17.5.0 colorlog>=3.0.1 simplejson>=3.11.1 recommonmark
 RUN pip3 install sphinx==1.5.6 sphinx_rtd_theme>=0.2.4 enum34==1.1.6 PyYAML==3.12
 
 RUN pip3 install cmake
-RUN pip3 install pyqrllib
+RUN pip3 install pyqrllib==0.1.14
 
 # ENV - Define environment variables
 # TODO: define any required environment variables
