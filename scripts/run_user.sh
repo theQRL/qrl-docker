@@ -7,16 +7,17 @@ rm -rf ${HOME}/QRL
 #RUN pip install -i https://testpypi.python.org/pypi --extra-index-url https://pypi.python.org/simple/  --upgrade qrl
 
 REPO=https://github.com/jleni/QRL.git
-REPO_BRANCH=new_qrllib
+REPO_BRANCH=master
 git clone -b ${REPO_BRANCH} ${REPO} ${HOME}/QRL
 GITHASH=$(git -C ${HOME}/QRL/ rev-parse HEAD)
 echo "GitRepo: " $GITHASH
 
+echo "Install dependencies"
 sudo pip3 install -r ${HOME}/QRL/requirements.txt > /dev/null
 
 ifconfig | perl -nle 's/dr:(\S+)/print $1/e'
 
-
+echo "Boot phase: ${BOOT_PHASE}"
 case "${BOOT_PHASE}" in
         bootstrap)
             echo "Collect Wallets"
@@ -28,12 +29,13 @@ case "${BOOT_PHASE}" in
             then
                 echo "Waiting for node 1"
                 sleep 2
+            else
+                # qrl binds to 127.0.0.1 so we need some special redirection here
+                socat -d tcp-listen:18888,reuseaddr,fork tcp:127.0.0.1:8888 &
+                socat -d tcp-listen:12000,reuseaddr,fork tcp:127.0.0.1:2000 &
+                socat -d tcp-listen:18080,reuseaddr,fork tcp:127.0.0.1:8080 &
+                socat -d tcp-listen:19009,reuseaddr,fork tcp:127.0.0.1:9009 &
             fi
-
-            # # qrl binds to 127.0.0.1 so we need some special redirection here
-            # socat -d tcp-listen:18888,reuseaddr,fork tcp:127.0.0.1:8888 &
-            # socat -d tcp-listen:12000,reuseaddr,fork tcp:127.0.0.1:2000 &
-            # socat -d tcp-listen:18080,reuseaddr,fork tcp:127.0.0.1:8080 &
 
             cp ${HOME}/genesis.yml ${HOME}/QRL/qrl/core/genesis.yml
             python3 ${HOME}/QRL/start_qrl.py -l DEBUG

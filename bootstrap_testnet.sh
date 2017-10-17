@@ -8,7 +8,7 @@ echo "****************************************************************"
 echo "                     FLUSHING EVERYTHING"
 echo "****************************************************************"
 echo "****************************************************************"
-rm -r testnet_vols/*
+#rm -r testnet_vols/*
 
 echo "****************************************************************"
 echo "****************************************************************"
@@ -24,9 +24,9 @@ echo "                       BOOTSTRAPPING"
 echo "****************************************************************"
 echo "****************************************************************"
 export BOOT_PHASE=bootstrap
-docker-compose up --scale node=9
+docker-compose up --scale node=5
 
-# Get Addresses and prepare genesis block
+# # Get Addresses and prepare genesis block
 python3 ./scripts/collect_wallets.py
 
 echo "****************************************************************"
@@ -35,4 +35,4 @@ echo "                       STARTING TESTNET"
 echo "****************************************************************"
 echo "****************************************************************"
 export BOOT_PHASE=start
-docker-compose up --scale node=9
+docker-compose up --scale node=5

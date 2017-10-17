@@ -1,25 +1,17 @@
 #Download base ubuntu image
 FROM ubuntu:16.04
-RUN apt-get update
-RUN apt-get -y install ca-certificates curl
-RUN apt-get -y install net-tools
+RUN apt-get update && \
+    apt-get -y install ca-certificates curl && \
+    apt-get -y install build-essential net-tools git sudo socat && \
+    apt-get -y install swig3.0 python3-dev python3-pip build-essential cmake pkg-config libssl-dev libffi-dev
 
-# Prepare pip
-RUN apt-get -y install python3 python3-pip python3-dev git sudo
-RUN apt-get -y install socat
-RUN apt-get -y install build-essential
-RUN apt-get -y install swig3.0
+RUN echo "ALL ALL=NOPASSWD: ALL" >> /etc/sudoers
 
-RUN pip3 install --upgrade pip
-RUN pip3 install docker
+RUN pip3 install -U pip docker-py
 
 # Save time by preinstalling 
-RUN pip3 install jsonpickle>=0.9.5 leveldb==0.20 statistics>=1.0.3.5 ntplib>=0.3.3 
-RUN pip3 install Twisted==17.5.0 colorlog>=3.0.1 simplejson>=3.11.1 recommonmark>=0.4.0
-RUN pip3 install sphinx==1.5.6 sphinx_rtd_theme>=0.2.4 enum34==1.1.6 PyYAML==3.12
-
-RUN pip3 install cmake
-RUN pip3 install pyqrllib==0.1.14
+RUN pip3 install jsonpickle leveldb statistics ntplib Twisted colorlog simplejson PyYAML
+RUN pip3 install pyqrllib
 
 # ENV - Define environment variables
 # TODO: define any required environment variables
