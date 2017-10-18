@@ -13,7 +13,7 @@ GITHASH=$(git -C ${HOME}/QRL/ rev-parse HEAD)
 echo "GitRepo: " $GITHASH
 
 echo "Install dependencies"
-sudo pip3 install -r ${HOME}/QRL/requirements.txt > /dev/null
+sudo -H pip3 install -r ${HOME}/QRL/requirements.txt #> /dev/null
 
 ifconfig | perl -nle 's/dr:(\S+)/print $1/e'
 
