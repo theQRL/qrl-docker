@@ -151,7 +151,7 @@
             <path>
               <item name="qrl_docker" type="b2602c69:ProjectViewProjectNode" />
               <item name="qrl_docker" type="462c0819:PsiDirectoryNode" />
-              <item name="testnet_vols" type="462c0819:PsiDirectoryNode" />
+              <item name="volumes" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />

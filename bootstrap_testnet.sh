@@ -2,13 +2,14 @@
 
 export DOCKER_UID=$( id -u ${USER} )
 export DOCKER_GID=$( id -g ${USER} )
+export NUM_NODES=5
 
 echo "****************************************************************"
 echo "****************************************************************"
 echo "                     FLUSHING EVERYTHING"
 echo "****************************************************************"
 echo "****************************************************************"
-#rm -r testnet_vols/*
+#rm -r volumes/*
 
 echo "****************************************************************"
 echo "****************************************************************"
@@ -24,15 +25,14 @@ echo "                       BOOTSTRAPPING"
 echo "****************************************************************"
 echo "****************************************************************"
 export BOOT_PHASE=bootstrap
-docker-compose up --scale node=5
-
-# # Get Addresses and prepare genesis block
-python3 ./scripts/collect_wallets.py
+export LOCALNET_ONLY=yes
+docker-compose up --scale node=${NUM_NODES}
+python3 ./scripts/collect_wallets.py # Get Addresses and prepare genesis block
 
 echo "****************************************************************"
 echo "****************************************************************"
-echo "                       STARTING TESTNET"
+echo "                       STARTING LOCALNET"
 echo "****************************************************************"
 echo "****************************************************************"
 export BOOT_PHASE=start
-docker-compose up --scale node=5
+docker-compose up --scale node=${NUM_NODES}

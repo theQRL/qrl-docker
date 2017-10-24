@@ -1,2 +1,2 @@
 #!/bin/sh
-rm -r testnet_vols
+rm -r volumes

@@ -14,7 +14,7 @@ services:
     # - "127.0.0.1:22001:12000"
     # - "127.0.0.1:27001:18080"
     volumes:
-    - ./testnet_vols:/testnet_vols
+    - ./volumes:/volumes
     - ./scripts:/root/scripts
     - /var/run/docker.sock:/var/run/docker.sock
     - /etc/group:/etc/group:ro

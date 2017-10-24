@@ -3,7 +3,7 @@ from collections import OrderedDict
 import glob
 
 sources = []
-for filename in glob.iglob('./testnet_vols/**/wallet_address', recursive=True):
+for filename in glob.iglob('./volumes/**/wallet_address', recursive=True):
     sources.append(filename)
 
 wallets = []
@@ -18,5 +18,3 @@ with open('./scripts/genesis.yml', 'w') as f:
         f.write("  {} : {}\n".format(w, 10000))
 
 print(wallets)
-
-# determine winner??
