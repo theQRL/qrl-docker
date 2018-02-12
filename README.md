@@ -1,3 +1,7 @@
+# THIS REPOSITORY IS OBSOLETE. Its use is not recommended
+
+-----------------------
+
 # QRL container (docker / docker compose)
 
 These scripts allow for running one or many containerized qrl nodes.
