@@ -1,0 +1,25 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: alpine:3.5
+    environment:
+      CURL_DATA: "\"Content-Type: application/json\" --data '{\"build\": true}'"
+    steps:
+      - run: apk add --no-cache curl
+      - run: echo ${DOCKERHUB_TOKEN}
+      - run: echo ${CURL_DATA}
+      - run: "curl -X POST --header 'Content-Type: application/json' --data '{\"build\": true}' https://registry.hub.docker.com/u/qrledger/qrl-docker/trigger/${DOCKERHUB_TOKEN}/"
+
+workflows:
+  version: 2
+  nightly:
+    triggers:
+    - schedule:
+      cron: "0 0 * * *"
+      filters:
+        branches:
+          only:
+          - master
+    jobs:
+      - build
