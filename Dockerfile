@@ -3,14 +3,19 @@ FROM ubuntu:16.04
 RUN apt-get update && \
     apt-get -y install software-properties-common python-software-properties && \
     apt-get -y install ca-certificates curl && \
-    apt-get -y install build-essential pkg-config git sudo wget
+    apt-get -y install build-essential pkg-config git sudo wget && \
+    apt-get -y install gdebi
 
-# Prepare python
-RUN apt-get -y install swig3.0 python3 python3-dev python3-pip python3-venv libhwloc-dev libboost-dev
+# Install Chrome
+RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+RUN gdebi google-chrome-stable_current_amd64.deb
 
-RUN pip3 install -U pip cmake setuptools
-RUN pip3 install -U -r https://raw.githubusercontent.com/theQRL/QRL/master/requirements.txt
-RUN pip3 install -U -r https://raw.githubusercontent.com/theQRL/QRL/master/test-requirements.txt
+# Prepare python -- done in Circle
+# RUN apt-get -y install swig3.0 python3 python3-dev python3-pip python3-venv libhwloc-dev libboost-dev
+
+# RUN pip3 install -U pip cmake setuptools
+# RUN pip3 install -U -r https://raw.githubusercontent.com/theQRL/QRL/master/requirements.txt
+# RUN pip3 install -U -r https://raw.githubusercontent.com/theQRL/QRL/master/test-requirements.txt
 
 RUN echo "ALL ALL=NOPASSWD: ALL" >> /etc/sudoers
 
