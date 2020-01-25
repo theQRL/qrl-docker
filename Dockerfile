@@ -1,27 +1,58 @@
-#Download base ubuntu image
-FROM ubuntu:18.04
-RUN apt-get update && \
-    apt-get -y install software-properties-common && \
-    apt-get -y install ca-certificates curl && \
-    apt-get -y install build-essential pkg-config git sudo wget
-
-# Prepare python
-RUN apt-get -y install swig3.0 python3 python3-dev python3-pip python3-venv libhwloc-dev libboost-dev
-
-RUN pip3 install -U pip cmake setuptools
-RUN pip3 install -U -r https://raw.githubusercontent.com/theQRL/QRL/master/requirements.txt
-RUN pip3 install -U -r https://raw.githubusercontent.com/theQRL/QRL/master/test-requirements.txt
+FROM ubuntu:latest
+SHELL ["/bin/bash", "-c"]
 
 RUN echo "ALL ALL=NOPASSWD: ALL" >> /etc/sudoers
 
-# ENV - Define environment variables
-# TODO: define any required environment variables
+RUN apt-get update && \
+    apt-get -y install swig3.0 \
+                      python3-dev \
+                      python3-pip \
+                      build-essential \
+                      pkg-config \
+                      libssl-dev \
+                      libffi-dev \
+                      libhwloc-dev \
+                      libboost-dev \
+                      wget
 
-# COPY - Copy configuration/scripts
+RUN cd /usr/local/src \
+    && wget https://cmake.org/files/v3.10/cmake-3.10.3.tar.gz \
+    && tar xvf cmake-3.10.3.tar.gz \
+    && cd cmake-3.10.3 \
+    && ./bootstrap \
+    && make \
+    && make install \
+    && cd .. \
+    && rm -rf cmake*
 
-# VOLUME - link directories to host
+RUN pip3 install -U setupTools
+RUN pip3 install -U qrl
 
-# START SCRIPT - The script is started from travis with the appropriate environment variables
+# ¡ADD ./config.yml /root/.qrl/config.yml
 
-# EXPOSE PORTS
-# TODO: Map ports to get access from outside
+# public API
+EXPOSE 19009
+
+# admin API
+EXPOSE 19008
+
+# mining API
+EXPOSE 19007
+
+# debug API
+EXPOSE 52134
+
+# grpc proxy
+EXPOSE 18090
+
+# wallet daemom
+EXPOSE 18091
+
+# wallet api
+EXPOSE 19010
+
+# p2p
+EXPOSE 19000
+
+ENTRYPOINT start_qrl
+
