@@ -54,5 +54,9 @@ EXPOSE 19010
 # p2p
 EXPOSE 19000
 
+# environment variables
+ENV LC_ALL C.UTF-8
+ENV LANG C.UTF-8
+
 ENTRYPOINT start_qrl
 
