@@ -35,3 +35,7 @@ Each branch contains configuration specific for each platform. The Dockerfile ca
 ![CLI](https://i.imgur.com/ukaYP6s.gif)
 
 [![Docker Desktop](https://i.imgur.com/FibGaaG.png)](https://vimeo.com/387298687)
+
+### Windows user?
+
+Use PowerShell run as an Administrator before running the Docker CLI commands.
