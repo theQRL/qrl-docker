@@ -29,3 +29,9 @@ Each branch contains configuration specific for each platform. The Dockerfile ca
 5. Generate an encrypted wallet (-i and -t flags to interact with terminal)
 
     ``docker exec -i -t qrl-node qrl wallet_gen --encrypt``
+
+## Docker desktop
+
+![CLI](https://i.imgur.com/ukaYP6s.gif)
+
+[![Docker Desktop](https://i.imgur.com/FibGaaG.png)](https://vimeo.com/387298687)
