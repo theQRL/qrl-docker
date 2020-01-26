@@ -1,8 +1,6 @@
 FROM ubuntu:latest
 SHELL ["/bin/bash", "-c"]
 
-RUN echo "ALL ALL=NOPASSWD: ALL" >> /etc/sudoers
-
 RUN apt-get update && \
     apt-get -y install swig3.0 \
                       python3-dev \
@@ -28,7 +26,9 @@ RUN cd /usr/local/src \
 RUN pip3 install -U setupTools
 RUN pip3 install -U qrl
 
-# ¡ADD ./config.yml /root/.qrl/config.yml
+RUN groupadd -g 999 qrl && \
+    useradd -r -u 999 -g qrl qrl
+USER qrl
 
 # public API
 EXPOSE 19009
@@ -59,4 +59,3 @@ ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
 
 ENTRYPOINT start_qrl
-
