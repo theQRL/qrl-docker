@@ -28,6 +28,12 @@ RUN pip3 install -U qrl
 
 RUN groupadd -g 999 qrl && \
     useradd -r -u 999 -g qrl qrl
+
+RUN mkdir /home/qrl
+RUN chown -R qrl:qrl /home/qrl
+ENV HOME=/home/qrl
+WORKDIR $HOME
+
 USER qrl
 
 # public API
