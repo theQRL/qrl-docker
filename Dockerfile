@@ -30,6 +30,11 @@ RUN groupadd -g 999 qrl && \
     useradd -r -u 999 -g qrl qrl
 
 RUN mkdir /home/qrl
+RUN mkdir /home/qrl/.qrl
+
+COPY ./config.yml /home/qrl/.qrl
+COPY ./genesis.yml /home/qrl/.qrl
+
 RUN chown -R qrl:qrl /home/qrl
 ENV HOME=/home/qrl
 WORKDIR $HOME
