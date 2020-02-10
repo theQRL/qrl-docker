@@ -1,17 +1,12 @@
-FROM ubuntu:latest
-SHELL ["/bin/bash", "-c"]
-
+#Download base debian 10 'buster' image
+FROM debian:10
 RUN apt-get update && \
-    apt-get -y install swig3.0 \
-                      python3-dev \
-                      python3-pip \
-                      build-essential \
-                      pkg-config \
-                      libssl-dev \
-                      libffi-dev \
-                      libhwloc-dev \
-                      libboost-dev \
-                      wget
+    apt-get -y install software-properties-common && \
+    apt-get -y install ca-certificates curl && \
+    apt-get -y install build-essential pkg-config git sudo wget
+
+# Prepare python
+RUN apt-get -y install swig3.0 python3 python3-dev python3-pip python3-venv libhwloc-dev libboost-dev
 
 RUN cd /usr/local/src \
     && wget https://cmake.org/files/v3.10/cmake-3.10.3.tar.gz \
@@ -22,6 +17,8 @@ RUN cd /usr/local/src \
     && make install \
     && cd .. \
     && rm -rf cmake*
+
+RUN pip3 install -U pip setuptools
 
 RUN pip3 install -U setupTools
 RUN pip3 install -U qrl
