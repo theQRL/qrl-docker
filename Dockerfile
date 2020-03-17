@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:18.04
 SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update && \
