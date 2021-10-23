@@ -7,9 +7,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN  apt-get update && \
      apt-get upgrade && \
-     apt-get -y install software-properties-common \
-                        ca-certificates \
-                        build-essential \
+     apt-get -y install build-essential \
                         pkg-config \
                         swig \
                         python3-dev \
