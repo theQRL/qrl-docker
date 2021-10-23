@@ -1,9 +1,7 @@
 FROM ubuntu:20.10
 CMD ["--debug"]
 
-###Fix for apt stalling on install
-ENV TZ=SystemV
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 
 RUN  apt-get update && \
      apt-get upgrade && \
