@@ -5,9 +5,14 @@ RUN apt-get update && \
     apt-get -y install ca-certificates curl && \
     apt-get -y install build-essential pkg-config git sudo wget
 
-# Prepare python
-RUN apt-get -y install swig3.0 python3 python3-dev python3-pip python3-venv libhwloc-dev libboost-dev
+# Get Rust
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+RUN echo 'source $HOME/.cargo/env' >> $HOME/.bashrc
 
+# Prepare python
+RUN apt-get -y install swig3.0 python3 python3-dev python3-pip python3-venv libhwloc-dev libboost-dev libffi-dev
+
+RUN curl -fsSL https://bootstrap.pypa.io/pip/3.5/get-pip.py | python3.5
 RUN pip3 install -U pip cmake setuptools
 RUN pip3 install -U -r https://raw.githubusercontent.com/theQRL/QRL/master/requirements.txt
 RUN pip3 install -U -r https://raw.githubusercontent.com/theQRL/QRL/master/test-requirements.txt
