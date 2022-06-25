@@ -1,8 +1,6 @@
 FROM ubuntu:20.10
 CMD ["--debug"]
 
-
-
 RUN  apt-get update && \
      apt-get upgrade && \
      apt-get -y install build-essential \
@@ -57,7 +55,6 @@ EXPOSE 19010
 # p2p
 EXPOSE 19000
 
-
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
- ENTRYPOINT ["start_qrl"]
+ENTRYPOINT ["start_qrl"]
