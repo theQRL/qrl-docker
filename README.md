@@ -10,13 +10,13 @@ Each branch contains configuration specific for each platform. The Dockerfile ca
 
 (requires Docker to be installed)
 
-1. Pull docker image of QRL node in Ubuntu 18.04 container:
+1. Pull docker image of QRL node in Ubuntu 22.04 container:
 
-    ``docker pull qrledger/qrl-docker:bionic``
+    ``docker pull qrledger/qrl-docker:jammy``
 
 2. Run a detached container:
 
-    ``docker run -d --name=qrl-node qrledger/qrl-docker:bionic``
+    ``docker run -d --name=qrl-node qrledger/qrl-docker:jammy``
 
 3. Start the node:
 
