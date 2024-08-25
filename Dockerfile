@@ -1,21 +1,21 @@
-FROM ubuntu:20.10
+FROM ubuntu:22.04
 CMD ["--debug"]
 
-RUN  apt-get update && \
-     apt-get upgrade && \
-     apt-get -y install build-essential \
+RUN apt-get update -y 
+RUN apt-get upgrade -y
+RUN apt-get -y install build-essential \
                         pkg-config \
-                        swig \
+                        swig3.0 \
                         python3-dev \
                         python3-pip \
                         python3-venv \
                         libhwloc-dev \
                         libboost-dev \
+                        libffi-dev \
                         libleveldb-dev \
                         python3-six \
                         cmake \
                         libssl-dev
-RUN apt-get clean
 
 RUN groupadd -g 999 qrl && \
     useradd -r -u 999 -g qrl qrl
@@ -28,8 +28,9 @@ USER qrl
 ENV PATH "$PATH:/home/qrl/.local/bin"
 
 RUN pip3 install -U setuptools  
+
+RUN pip3 install service-identity==21.1.0
 RUN pip3 install -U qrl
-RUN pip3 install -U service_identity
 
 # public API
 EXPOSE 19009
