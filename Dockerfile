@@ -1,7 +1,7 @@
 #Download base ubuntu image
-FROM ubuntu:16.04
+FROM ubuntu:24.04
 RUN apt-get update && \
-    apt-get -y install software-properties-common python-software-properties && \
+    apt-get -y install python-software-properties && \
     apt-get -y install ca-certificates curl && \
     apt-get -y install build-essential pkg-config git sudo wget
 
