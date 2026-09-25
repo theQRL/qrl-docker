@@ -1,18 +1,127 @@
-version: 2
+# Identical on every distro branch: the branch name IS the image tag, so one
+# config serves them all and there is nothing to edit when a new Ubuntu
+# release branch is forked.
+#
+# Replaces the old Docker Hub autobuild trigger
+# (registry.hub.docker.com/.../trigger/<token>), which Docker retired along
+# with automated builds on the free plan. Requires two CircleCI project
+# environment variables: DOCKERHUB_USERNAME and DOCKERHUB_TOKEN.
+version: 2.1
+
+orbs:
+  docker: circleci/docker@2.8.2
+
+# The branch whose image also gets the :latest tag. Move this to the newest
+# LTS branch that builds green, and only that.
+parameters:
+  latest_branch:
+    type: string
+    default: "noble"
+
 jobs:
-  build:
-    docker:
-      - image: alpine:3.5
-    environment:
-      CURL_DATA: "\"Content-Type: application/json\" --data '{\"build\": true}'"
+  build_and_push:
+    executor: docker/docker
     steps:
-      - run: apk add --no-cache curl
-      - run: echo ${DOCKERHUB_TOKEN}
-      - run: echo ${CURL_DATA}
-      - run: "curl -X POST --header 'Content-Type: application/json' --data '{\"build\": true}' https://registry.hub.docker.com/u/qrledger/qrl-docker/trigger/${DOCKERHUB_TOKEN}/"
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Enable QEMU for cross-architecture builds
+          command: |
+            docker run --privileged --rm tonistiigi/binfmt --install all
+            docker buildx create --use --name qrlbuilder || docker buildx use qrlbuilder
+      - run:
+          name: Build
+          command: |
+            # Which architectures this branch can produce is decided by the
+            # dependencies, not by anything in this repo:
+            #   * bionic and focal build theQRL/QRL master, whose released
+            #     pyqryptonight and pyqrandomx compile with -msse2 and -maes.
+            #     Those are x86 instructions, so arm64 cannot be built at all.
+            #   * the other branches use the forked dependencies, which build
+            #     on both architectures.
+            # A single tag carries both via a manifest list, so there is no
+            # need for per-architecture branches — the Dockerfile is identical
+            # either way.
+            case "$CIRCLE_BRANCH" in
+              bionic|focal) PLATFORMS=linux/amd64 ;;
+              *)            PLATFORMS=linux/amd64,linux/arm64 ;;
+            esac
+            echo "export PLATFORMS=$PLATFORMS" >> "$BASH_ENV"
+            # Load a native image first so the smoke test below can run it.
+            docker buildx build --platform linux/amd64 --load \
+              -t "qrledger/qrl-docker:${CIRCLE_BRANCH}" .
+      - run:
+          name: Smoke test the image
+          command: |
+            IMG="qrledger/qrl-docker:${CIRCLE_BRANCH}"
+
+            # 1. The package data must have survived the wheel build — a node
+            #    that cannot find genesis.yml exits at start.
+            docker run --rm --entrypoint python3 "$IMG" -c \
+              "import qrl, os; \
+               p = os.path.join(os.path.dirname(qrl.__file__), 'core', 'genesis.yml'); \
+               assert os.path.exists(p), p; print('genesis.yml OK')"
+
+            # 2. A green build is NOT enough. Start the node for real: a missing
+            #    /etc/services once produced an image that built perfectly and
+            #    then died with "Could not contact NTP servers after 6 retries".
+            docker volume create ci-smoke > /dev/null
+            docker run -d --name ci-smoke -v ci-smoke:/home/qrl/.qrl "$IMG" > /dev/null
+            ok=0
+            for _ in $(seq 1 40); do
+              if docker exec --user qrl ci-smoke qrl state > /dev/null 2>&1; then ok=1; break; fi
+              if [ "$(docker inspect -f '{{.State.Running}}' ci-smoke)" = "false" ]; then break; fi
+              sleep 5
+            done
+            if [ "$ok" != "1" ]; then
+              echo "node did not come up:"; docker logs ci-smoke | tail -40; exit 1
+            fi
+
+            # 3. The wallet must land inside the volume. Upstream defaults
+            #    --wallet_dir to '.', which would put it in the container layer
+            #    where docker rm destroys it; the image sets ENV_QRL_WALLET_DIR.
+            wp=$(docker exec --user qrl ci-smoke qrl wallet_gen \
+                 | sed -n 's/^Wallet at *: *//p' | tr -d '\r')
+            [ "$wp" = "/home/qrl/.qrl/wallet.json" ] || {
+              echo "wallet escaped the volume: '$wp'"; exit 1; }
+            docker run --rm -v ci-smoke:/d:ro alpine test -f /d/wallet.json
+
+            docker rm -f ci-smoke > /dev/null; docker volume rm -f ci-smoke > /dev/null
+            echo "smoke test OK"
+      - run:
+          name: Push
+          command: |
+            echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+            TAGS="-t qrledger/qrl-docker:${CIRCLE_BRANCH}"
+            if [ "$CIRCLE_BRANCH" = "<< pipeline.parameters.latest_branch >>" ]; then
+              TAGS="$TAGS -t qrledger/qrl-docker:latest"
+            fi
+            # One tag, a manifest list covering $PLATFORMS. arm64 users get the
+            # arm64 image automatically; on bionic and focal they get a clear
+            # "no matching manifest" instead of a broken image.
+            docker buildx build --platform "$PLATFORMS" --push $TAGS .
 
 workflows:
-  version: 2
-  build-deploy:
+  commit:
     jobs:
-      - build
+      - build_and_push:
+          filters:
+            branches:
+              # master carries documentation only — there is no Dockerfile to
+              # build there.
+              ignore:
+                - master
+                - gh-pages
+  # Rebuild weekly so the image picks up Ubuntu base-image security updates
+  # even when nothing in this repo changes.
+  weekly:
+    triggers:
+      - schedule:
+          cron: "0 3 * * 1"
+          filters:
+            branches:
+              only:
+                - << pipeline.parameters.latest_branch >>
+    jobs:
+      - build_and_push
