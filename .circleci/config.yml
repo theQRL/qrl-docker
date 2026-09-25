@@ -43,18 +43,56 @@ jobs:
             # A single tag carries both via a manifest list, so there is no
             # need for per-architecture branches — the Dockerfile is identical
             # either way.
+            # bionic and focal build theQRL/QRL master, whose released
+            # pyqryptonight and pyqrandomx compile with -msse2 and -maes - x86
+            # instructions, so arm64 cannot be built there at all. The other
+            # branches use the forked dependencies, which do build on both.
+            #
+            # arm64 is nonetheless OFF by default. These runners are x86, so an
+            # arm64 image is built under QEMU, and the vendored C++ extensions
+            # take 20-30 minutes to compile that way - measured locally at
+            # 1376s and 1617s for the equivalent emulated builds. That is too
+            # slow to sit in every push.
+            #
+            # To publish arm64, do it on a native Arm runner rather than under
+            # emulation: give this job (or a second one) a CircleCI Arm
+            # resource class and set BUILD_ARM64=1. Emulation is not a
+            # practical substitute here.
             case "$CIRCLE_BRANCH" in
               bionic|focal) PLATFORMS=linux/amd64 ;;
-              *)            PLATFORMS=linux/amd64,linux/arm64 ;;
+              *)            PLATFORMS=linux/amd64
+                            [ "${BUILD_ARM64:-0}" = "1" ] && PLATFORMS=linux/amd64,linux/arm64 ;;
             esac
             echo "export PLATFORMS=$PLATFORMS" >> "$BASH_ENV"
-            # Load a native image first so the smoke test below can run it.
-            docker buildx build --platform linux/amd64 --load \
-              -t "qrledger/qrl-docker:${CIRCLE_BRANCH}" .
+
+            # Load one image per architecture so every architecture we publish
+            # is smoke tested first. buildx cannot --load a multi-platform
+            # build, so this is one invocation per platform; they share the
+            # builder's cache with the push below, and the push therefore adds
+            # no build work beyond what is done here.
+            for p in $(echo "$PLATFORMS" | tr ',' ' '); do
+              tag="qrledger/qrl-docker:${CIRCLE_BRANCH}-$(echo "$p" | tr '/' '-')"
+              echo "building $p -> $tag"
+              docker buildx build --platform "$p" --load -t "$tag" .
+            done
       - run:
-          name: Smoke test the image
+          name: Smoke test every architecture
           command: |
-            IMG="qrledger/qrl-docker:${CIRCLE_BRANCH}"
+            # Run against EACH architecture in the manifest, not just the
+            # native one. Everything that broke this repo recently was
+            # architecture-sensitive - pyqryptonight's -msse2/-maes is exactly
+            # why bionic and focal are amd64-only - so publishing an arm64
+            # image that has never been started is the gap worth closing.
+            smoke() {
+            IMG="$1"; PLAT="$2"
+            echo "=============== smoke test: $PLAT ==============="
+
+            # A non-native image runs under QEMU and is far slower to start,
+            # so it gets a longer budget.
+            case "$PLAT" in
+              linux/amd64) TRIES=40 ;;
+              *)           TRIES=90 ;;
+            esac
 
             # 1. The package data must have survived the wheel build — a node
             #    that cannot find genesis.yml exits at start.
@@ -69,7 +107,7 @@ jobs:
             docker volume create ci-smoke > /dev/null
             docker run -d --name ci-smoke -v ci-smoke:/home/qrl/.qrl "$IMG" > /dev/null
             ok=0
-            for _ in $(seq 1 40); do
+            for _ in $(seq 1 "$TRIES"); do
               if docker exec --user qrl ci-smoke qrl state > /dev/null 2>&1; then ok=1; break; fi
               if [ "$(docker inspect -f '{{.State.Running}}' ci-smoke)" = "false" ]; then break; fi
               sleep 5
@@ -88,7 +126,12 @@ jobs:
             docker run --rm -v ci-smoke:/d:ro alpine test -f /d/wallet.json
 
             docker rm -f ci-smoke > /dev/null; docker volume rm -f ci-smoke > /dev/null
-            echo "smoke test OK"
+            echo "smoke test OK: $PLAT"
+            }
+
+            for p in $(echo "$PLATFORMS" | tr ',' ' '); do
+              smoke "qrledger/qrl-docker:${CIRCLE_BRANCH}-$(echo "$p" | tr '/' '-')" "$p"
+            done
       - run:
           name: Push
           command: |
