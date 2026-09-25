@@ -1,0 +1,36 @@
+services:
+  qrl-node:
+    build:
+      context: .
+      args:
+        # Pin to a commit SHA for reproducible builds.
+        QRL_REF: master
+    image: qrl:bionic
+    container_name: qrl-node
+    restart: unless-stopped
+    stop_grace_period: 60s
+    ports:
+      - "19000:19000"   # P2P networking
+      - "19009:19009"   # gRPC public API
+      # The remaining APIs are unauthenticated. Leave them bound to loopback,
+      # or comment them out entirely if you do not use them.
+      - "127.0.0.1:19007:19007"   # gRPC mining API
+      - "127.0.0.1:19008:19008"   # gRPC admin API
+      - "127.0.0.1:18090:18090"   # wallet daemon
+      - "127.0.0.1:18091:18091"   # wallet HTTP API
+      - "127.0.0.1:52134:52134"   # gRPC proxy
+    volumes:
+      - qrl-data:/home/qrl/.qrl
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: "2.0"
+
+volumes:
+  qrl-data:
