@@ -1,0 +1,25 @@
+# Node data and backups — never commit these.
+# backup/ holds wallet.json (seed material, even when encrypted) and the
+# blockchain state restored via `docker cp`.
+backup/
+wallet.json
+.qrl/
+*.log
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+docker-compose.override.yml
+
+# Editor / OS noise
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
