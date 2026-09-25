@@ -6,9 +6,9 @@ Docker images for running a [QRL](https://github.com/theQRL/QRL) node.
 
 | Ubuntu | Branch | Image tag | Dependencies | Arch | CI |
 |---|---|---|---|---|---|
-| 26.04 (Resolute) | [`resolute`](../../tree/resolute) | `:resolute` | ⚠️ **TEST** | amd64 published, arm64 buildable | [![CircleCI](https://dl.circleci.com/status-badge/img/gh/theQRL/qrl-docker/tree/resolute.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/theQRL/qrl-docker/tree/resolute) |
-| 24.04 (Noble) | [`noble`](../../tree/noble) | `:noble`, `:latest` | ⚠️ **TEST** | amd64 published, arm64 buildable | [![CircleCI](https://dl.circleci.com/status-badge/img/gh/theQRL/qrl-docker/tree/noble.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/theQRL/qrl-docker/tree/noble) |
-| 22.04 (Jammy) | [`jammy`](../../tree/jammy) | `:jammy` | ⚠️ **TEST** | amd64 published, arm64 buildable | [![CircleCI](https://dl.circleci.com/status-badge/img/gh/theQRL/qrl-docker/tree/jammy.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/theQRL/qrl-docker/tree/jammy) |
+| 26.04 (Resolute) | [`resolute`](../../tree/resolute) | `:resolute` | ⚠️ **TEST** | amd64, arm64 | [![CircleCI](https://dl.circleci.com/status-badge/img/gh/theQRL/qrl-docker/tree/resolute.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/theQRL/qrl-docker/tree/resolute) |
+| 24.04 (Noble) | [`noble`](../../tree/noble) | `:noble`, `:latest` | ⚠️ **TEST** | amd64, arm64 | [![CircleCI](https://dl.circleci.com/status-badge/img/gh/theQRL/qrl-docker/tree/noble.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/theQRL/qrl-docker/tree/noble) |
+| 22.04 (Jammy) | [`jammy`](../../tree/jammy) | `:jammy` | ⚠️ **TEST** | amd64, arm64 | [![CircleCI](https://dl.circleci.com/status-badge/img/gh/theQRL/qrl-docker/tree/jammy.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/theQRL/qrl-docker/tree/jammy) |
 | 20.04 (Focal) | [`focal`](../../tree/focal) | `:focal` | Upstream theQRL | amd64 only | [![CircleCI](https://dl.circleci.com/status-badge/img/gh/theQRL/qrl-docker/tree/focal.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/theQRL/qrl-docker/tree/focal) |
 | 18.04 (Bionic) | [`bionic`](../../tree/bionic) | `:bionic` | Upstream theQRL | amd64 only | [![CircleCI](https://dl.circleci.com/status-badge/img/gh/theQRL/qrl-docker/tree/bionic.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/theQRL/qrl-docker/tree/bionic) |
 
@@ -152,19 +152,24 @@ inside an upstream dependency, so a `bionic-arm64` branch would be a
 byte-identical copy of `bionic` that still fails to build. Instead each tag is
 a manifest list, and the tag carries whichever architectures CI built.
 
-**CI currently publishes `linux/amd64` only.** The runners are x86, so an arm64
-image has to be built under QEMU, and the vendored C++ extensions take 20-30
-minutes to compile that way (measured: 1376s and 1617s for the equivalent
-emulated builds). That is too slow to sit in every push, so arm64 is off by
-default and enabled with `BUILD_ARM64=1` — which is only worth doing on a
-native Arm runner, not under emulation.
-
-On an arm64 host, build the branch locally in the meantime; it compiles
-natively in a few minutes:
+Each architecture is built on a runner of that architecture and the results are
+joined into one manifest, so `docker pull` resolves to the caller's platform:
 
 ```bash
-git checkout noble && docker compose up -d --build
+docker buildx imagetools inspect qrledger/qrl-docker:noble
 ```
+
+`jammy`, `noble` and `resolute` publish `linux/amd64` and `linux/arm64`.
+`bionic` and `focal` publish `linux/amd64` alone, because the released
+`pyqryptonight` and `pyqrandomx` they depend on cannot be built for arm64.
+
+The per-architecture tags (`:noble-amd64`, `:noble-arm64`) exist as build
+artefacts. Pull the plain tag; Docker picks the right one.
+
+Earlier images were built for arm64 under emulation, which took 20-30 minutes
+for the vendored C++ extensions, so arm64 was dropped and every tag became
+amd64-only. An arm64 host pulling one of those got `illegal instruction` from
+pyqryptonight rather than a clear platform error. Native runners fixed that.
 
 Swapping the forked dependencies into an upstream build to get arm64 on the
 older releases does not work either: the forked `pyqryptonight` reports version
@@ -524,14 +529,16 @@ funds, so nothing is lost by discarding `data/`.
 
 ## Multi-architecture builds
 
-CI publishes `linux/amd64` only. To build for your own architecture, or both:
+CI publishes `linux/amd64` and `linux/arm64` for `jammy`, `noble` and
+`resolute`, and `linux/amd64` for `bionic` and `focal`. To build either
+yourself:
 
 ```bash
 docker buildx build --platform linux/amd64,linux/arm64 -t qrl:latest .
 ```
 
-On Apple Silicon or another arm64 host, building the branch locally is
-currently the way to get a native image.
+On Apple Silicon or another arm64 host, `docker pull` gives you a native image
+for the branches listed above; `bionic` and `focal` must be built locally.
 
 ## Maintaining the branches
 
