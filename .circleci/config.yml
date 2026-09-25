@@ -1,0 +1,34 @@
+# master carries the operator guide only — there is no image to build here.
+# The Dockerfiles live on the distro branches (bionic, focal, jammy, noble,
+# resolute), each of which builds and publishes its own tag.
+#
+# CircleCI still needs a config on every branch it follows, so this is a
+# near-no-op job that keeps master green. It replaces the previous config,
+# which POSTed to Docker's retired autobuild trigger endpoint and had not
+# built anything in years.
+version: 2.1
+
+jobs:
+  docs:
+    docker:
+      - image: cimg/base:current
+    steps:
+      - checkout
+      - run:
+          name: Documentation branch — nothing to build
+          command: |
+            # Assert the branch layout rather than just exiting 0: build files
+            # committed here by mistake would otherwise sit unnoticed, because
+            # nothing on this branch is ever built.
+            if [ -f Dockerfile ] || [ -f docker-compose.yml ]; then
+              echo "Build files found on master."
+              echo "Images are built from the distro branches; master is documentation only."
+              exit 1
+            fi
+            test -f README.md
+            echo "documentation branch OK — nothing to build"
+
+workflows:
+  docs:
+    jobs:
+      - docs
