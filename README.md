@@ -1,14 +1,16 @@
 # qrl-docker
 
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/theQRL/qrl-docker/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/theQRL/qrl-docker/tree/master)
+
 Docker images for running a [QRL](https://github.com/theQRL/QRL) node.
 
-| Ubuntu | Branch | Image tag | Dependencies | Arch |
-|---|---|---|---|---|
-| 26.04 (Resolute) | [`resolute`](../../tree/resolute) | `:resolute` | ⚠️ **TEST** | amd64, arm64 |
-| 24.04 (Noble) | [`noble`](../../tree/noble) | `:noble`, `:latest` | ⚠️ **TEST** | amd64, arm64 |
-| 22.04 (Jammy) | [`jammy`](../../tree/jammy) | `:jammy` | ⚠️ **TEST** | amd64, arm64 |
-| 20.04 (Focal) | [`focal`](../../tree/focal) | `:focal` | Upstream theQRL | amd64 only |
-| 18.04 (Bionic) | [`bionic`](../../tree/bionic) | `:bionic` | Upstream theQRL | amd64 only |
+| Ubuntu | Branch | Image tag | Dependencies | Arch | CI |
+|---|---|---|---|---|---|
+| 26.04 (Resolute) | [`resolute`](../../tree/resolute) | `:resolute` | ⚠️ **TEST** | amd64 published, arm64 buildable | [![CircleCI](https://dl.circleci.com/status-badge/img/gh/theQRL/qrl-docker/tree/resolute.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/theQRL/qrl-docker/tree/resolute) |
+| 24.04 (Noble) | [`noble`](../../tree/noble) | `:noble`, `:latest` | ⚠️ **TEST** | amd64 published, arm64 buildable | [![CircleCI](https://dl.circleci.com/status-badge/img/gh/theQRL/qrl-docker/tree/noble.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/theQRL/qrl-docker/tree/noble) |
+| 22.04 (Jammy) | [`jammy`](../../tree/jammy) | `:jammy` | ⚠️ **TEST** | amd64 published, arm64 buildable | [![CircleCI](https://dl.circleci.com/status-badge/img/gh/theQRL/qrl-docker/tree/jammy.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/theQRL/qrl-docker/tree/jammy) |
+| 20.04 (Focal) | [`focal`](../../tree/focal) | `:focal` | Upstream theQRL | amd64 only | [![CircleCI](https://dl.circleci.com/status-badge/img/gh/theQRL/qrl-docker/tree/focal.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/theQRL/qrl-docker/tree/focal) |
+| 18.04 (Bionic) | [`bionic`](../../tree/bionic) | `:bionic` | Upstream theQRL | amd64 only | [![CircleCI](https://dl.circleci.com/status-badge/img/gh/theQRL/qrl-docker/tree/bionic.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/theQRL/qrl-docker/tree/bionic) |
 
 **Upstream theQRL** means every dependency is a released theQRL package.
 **TEST** means the build pulls `pyqrllib`, `pyqryptonight` and `pyqrandomx`
@@ -142,16 +144,27 @@ forks exist to fix.
 The released `pyqryptonight` and `pyqrandomx` compile with `-msse2` and
 `-maes`, which are x86 instructions, so **the upstream branches are amd64
 only**. The forked dependencies build on both, which is why the TEST branches
-are the only ones usable on Apple Silicon and other arm64 hosts.
+are the only ones that can produce an arm64 image at all.
 
 There are no per-architecture branches, and adding them would not help. The
 `Dockerfile` does not differ by architecture — the `-msse2`/`-maes` flags are
 inside an upstream dependency, so a `bionic-arm64` branch would be a
 byte-identical copy of `bionic` that still fails to build. Instead each tag is
-a manifest list: CI publishes `linux/amd64,linux/arm64` for the TEST branches
-and `linux/amd64` alone for `bionic` and `focal`, so `docker pull` gives an
-arm64 host the right image automatically, or a clear "no matching manifest"
-where none exists.
+a manifest list, and the tag carries whichever architectures CI built.
+
+**CI currently publishes `linux/amd64` only.** The runners are x86, so an arm64
+image has to be built under QEMU, and the vendored C++ extensions take 20-30
+minutes to compile that way (measured: 1376s and 1617s for the equivalent
+emulated builds). That is too slow to sit in every push, so arm64 is off by
+default and enabled with `BUILD_ARM64=1` — which is only worth doing on a
+native Arm runner, not under emulation.
+
+On an arm64 host, build the branch locally in the meantime; it compiles
+natively in a few minutes:
+
+```bash
+git checkout noble && docker compose up -d --build
+```
 
 Swapping the forked dependencies into an upstream build to get arm64 on the
 older releases does not work either: the forked `pyqryptonight` reports version
