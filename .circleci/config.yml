@@ -92,6 +92,21 @@ jobs:
       - run:
           name: Push
           command: |
+            # Images are published only from theQRL. A fork builds and smoke
+            # tests exactly the same way, then stops here - so a fork's CI goes
+            # green without needing Docker Hub credentials, and cannot publish
+            # to qrledger/ even if someone sets them.
+            if [ "$CIRCLE_PROJECT_USERNAME" != "theQRL" ]; then
+              echo "Project is ${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}, not theQRL."
+              echo "Build and smoke test passed; skipping publish."
+              exit 0
+            fi
+
+            if [ -z "${DOCKERHUB_USERNAME:-}" ] || [ -z "${DOCKERHUB_TOKEN:-}" ]; then
+              echo "DOCKERHUB_USERNAME and DOCKERHUB_TOKEN must be set on this project."
+              exit 1
+            fi
+
             echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
             TAGS="-t qrledger/qrl-docker:${CIRCLE_BRANCH}"
             if [ "$CIRCLE_BRANCH" = "<< pipeline.parameters.latest_branch >>" ]; then
