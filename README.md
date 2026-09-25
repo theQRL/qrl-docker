@@ -50,6 +50,7 @@ them.
 | Runtime libraries | `libssl3t64`, `libffi8`, `libhwloc15`, `libleveldb1d`, `libpython3.14` |
 | Dependencies | **TEST** — jplomas forks of pyqrllib / pyqryptonight / pyqrandomx |
 | QRL source | `theQRL/QRL` @ `noble-work-in-progress` |
+| Architecture | `linux/amd64`, `linux/arm64` (one manifest; Docker picks) |
 | Image tag | `qrledger/qrl-docker:resolute` |
 
 Everything else — `entrypoint.sh`, `docker-compose.yml`, `.circleci/config.yml`
