@@ -1,41 +1,73 @@
-# qrl-docker
+# qrl-docker — Ubuntu 22.04 (Jammy Jellyfish)
 
-[![CircleCI](https://circleci.com/gh/theQRL/qrl-docker.svg?style=svg)](https://circleci.com/gh/theQRL/qrl-docker)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/theQRL/qrl-docker/tree/jammy.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/theQRL/qrl-docker/tree/jammy)
 
-This repo contains images used by QRL build processes.
+> ### ⚠️ TEST build
+>
+> This branch builds `theQRL/QRL` `noble-work-in-progress`, whose
+> `requirements.txt` pulls `pyqrllib`, `pyqryptonight` and `pyqrandomx` from
+> personal forks rather than the released theQRL packages. Those forks carry
+> the rework needed for modern Linux and **have not been exercised on a
+> production testnet**. This version is undergoing testing.
+>
+> Upstream `theQRL/QRL` `master` does not build on 22.04 — its 2018-era pins
+> (`cryptography==2.3`, `Twisted==20.3.0`) predate this release's OpenSSL 3.0
+> and setuptools. 20.04 (`focal`) is the newest branch with an upstream build.
 
-Each branch contains configuration specific for each platform. The Dockerfile can also be used as a reference of our recommended installation steps.
+QRL node image built on `ubuntu:22.04` (Python 3.10). Published as
+[`qrledger/qrl-docker:jammy`](https://hub.docker.com/r/qrledger/qrl-docker).
 
-## Example usage
+**The operator guide — ports, data persistence, backup, upgrading and
+migration — lives on the [`master`](../../tree/master) branch.** This file
+covers only what is specific to Jammy.
 
-(requires Docker to be installed)
+## Run it
 
-1. Pull docker image of QRL node in Ubuntu 22.04 container:
+```bash
+docker run -d --name qrl-node \
+  -p 19000:19000 -p 19009:19009 \
+  -v qrl-data:/home/qrl/.qrl \
+  qrledger/qrl-docker:jammy
+```
 
-    ``docker pull qrledger/qrl-docker:jammy``
+Or build this branch:
 
-2. Run a detached container:
+```bash
+docker compose up -d --build
+docker compose logs -f qrl-node
+```
 
-    ``docker run -d --name=qrl-node qrledger/qrl-docker:jammy``
+Do not drop the `-v qrl-data:/home/qrl/.qrl`. Without it the chain state and
+your wallet live in the container's writable layer and `docker rm` destroys
+them.
 
-3. Start the node:
+## What is specific to this branch
 
-    ``docker start qrl-node``
+| | |
+|---|---|
+| Base image | `ubuntu:22.04` |
+| Python | 3.10 |
+| Runtime libraries | `libssl3`, `libffi8`, `libhwloc15`, `libleveldb1d`, `libpython3.10` |
+| Dependencies | **TEST** — jplomas forks of pyqrllib / pyqryptonight / pyqrandomx |
+| QRL source | `theQRL/QRL` @ `noble-work-in-progress` |
+| Image tag | `qrledger/qrl-docker:jammy` |
 
-4. See the console logs:
+Everything else — `entrypoint.sh`, `docker-compose.yml`, `.circleci/config.yml`
+— is identical across the distro branches. Fixes to those belong on all of
+them.
 
-    ``docker logs qrl-node``
+## Build arguments
 
-5. Generate an encrypted wallet (-i and -t flags to interact with terminal)
+| Arg | Default | Purpose |
+| --- | --- | --- |
+| `QRL_REF` | `noble-work-in-progress` | Branch, tag or commit SHA of theQRL/QRL to build |
+| `QRL_REPO` | `https://github.com/theQRL/QRL.git` | Source repository (use for forks) |
+| `UBUNTU_VERSION` | `22.04` | Base image tag |
 
-    ``docker exec -i -t qrl-node qrl wallet_gen --encrypt``
+```bash
+docker build --build-arg QRL_REF=<sha> -t qrl:jammy .
+```
 
-## Docker desktop
-
-![CLI](https://i.imgur.com/ukaYP6s.gif)
-
-[![Docker Desktop](https://i.imgur.com/FibGaaG.png)](https://vimeo.com/387298687)
-
-### Windows user?
-
-Use PowerShell run as an Administrator before running the Docker CLI commands.
+`QRL_REF` defaults to `noble-work-in-progress`, which is what makes this a TEST
+build. Pin a commit SHA for anything you intend to reproduce; with a branch
+name, Docker's layer cache will reuse a clone from weeks ago.
