@@ -8,7 +8,7 @@
 # clean error. Building on a native Arm runner fixes that, and is faster than
 # the emulated build it replaces.
 #
-# Users still pull one tag: `docker pull qrledger/qrl-docker:noble` resolves to
+# Users still pull one tag: `docker pull qrledger/qrl-docker:<branch>` resolves to
 # the right architecture via the manifest. The per-architecture tags exist only
 # as build artefacts.
 #
