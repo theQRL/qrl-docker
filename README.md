@@ -178,6 +178,36 @@ The fix belongs upstream — publishing arm64 wheels, or guarding those compiler
 flags behind an architecture check, would make `bionic` and `focal` build on
 arm64 with no change to this repo.
 
+### CPU baseline
+
+The vendored C++ extensions were compiled with `-march=native`, which targets the
+machine doing the build. On CI that produced images which only ran on CPUs at
+least as capable as the runner: every amd64 image published before this needed
+AVX-512, and `resolute` additionally needed AVX-512 VBMI, so it died with
+`illegal instruction` even on an AVX-512 Xeon that lacked VBMI. The images
+worked wherever they happened to be tested and failed on ordinary consumer CPUs,
+which have no AVX-512 at all.
+
+Builds now target a portable baseline — `x86-64-v2`, falling back to `nehalem` on
+the older toolchains, plus `-maes`; and `armv8-a+crypto` on arm64. Any x86-64 CPU
+from roughly 2009 onward will run them. Nothing is given up in exchange:
+RandomX's vectorised Argon2 implementations are still compiled, and RandomX still
+selects them at runtime by CPUID, so a capable CPU uses them anyway.
+
+`jammy`, `noble` and `resolute` inherit this from their pinned dependencies, where
+it is fixed upstream. `bionic` and `focal` build theQRL/QRL `master`, which
+installs `pyqryptonight` and `pyqrandomx` from PyPI sdists that still compile with
+`-march=native`, so those two Dockerfiles export a portable baseline at build time
+instead. To check any build:
+
+```bash
+objdump -d _pyqrandomx*.so | grep -cE '^[[:space:]]+[0-9a-f]+:[[:space:]]+62 '
+```
+
+Byte `62` is the EVEX prefix, which in 64-bit mode means AVX-512 — the count
+should be zero. Grepping for `zmm` is not sufficient, because AVX512VL encodes
+xmm and ymm operands and so leaves no `zmm` behind.
+
 ## Ports
 
 | Port | Service | Safe to expose publicly? |
