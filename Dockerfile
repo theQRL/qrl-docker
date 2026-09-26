@@ -66,7 +66,30 @@ ENV PIP_CONSTRAINT=/etc/pip-constraints.txt
 # dropped from the wheel and the node dies at startup with
 # "FileNotFoundError: .../qrl/core/genesis.yml". Adding the recursive-include
 # restores them. Remove this line once MANIFEST.in is fixed upstream.
-RUN git clone --filter=blob:none --no-checkout "${QRL_REPO}" /tmp/QRL \
+# Portable ISA baseline for the vendored C++ extensions.
+#
+# QRL master takes pyqryptonight and pyqrandomx from PyPI, and those sdists
+# compile with "-march=native", which targets whichever machine does the build.
+# On a CI runner that produces an image that only runs on CPUs at least as
+# capable as the runner: an AVX-512 VBMI builder emits vpermb, an illegal
+# instruction on an older AVX-512 part such as a Skylake-W Xeon, and the miner
+# dies with SIGILL on its first hash.
+#
+# Both sdists place -march=native *before* ${CMAKE_CXX_FLAGS}, and CMake seeds
+# that from the environment, so flags exported here land last and GCC honours
+# the last -march. jammy and later pin git refs where this is fixed upstream and
+# so do not carry this block.
+RUN set -eux; \
+    if [ "$(dpkg --print-architecture)" = "amd64" ]; then \
+        if echo 'int main(void){return 0;}' | gcc -march=x86-64-v2 -x c - -o /dev/null 2>/dev/null; then \
+            BASELINE=x86-64-v2; \
+        else \
+            BASELINE=nehalem; \
+        fi; \
+        export CFLAGS="-march=${BASELINE} -mtune=generic"; \
+        export CXXFLAGS="${CFLAGS}"; \
+    fi; \
+    git clone --filter=blob:none --no-checkout "${QRL_REPO}" /tmp/QRL \
     && git -C /tmp/QRL checkout "${QRL_REF}" -- \
     && echo "recursive-include src/qrl *.yml *.proto *.csv *.json" >> /tmp/QRL/MANIFEST.in \
     && pip install --upgrade pip setuptools wheel \
