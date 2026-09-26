@@ -71,25 +71,38 @@ ENV PIP_CONSTRAINT=/etc/pip-constraints.txt
 # QRL master takes pyqryptonight and pyqrandomx from PyPI, and those sdists
 # compile with "-march=native", which targets whichever machine does the build.
 # On a CI runner that produces an image that only runs on CPUs at least as
-# capable as the runner: an AVX-512 VBMI builder emits vpermb, an illegal
-# instruction on an older AVX-512 part such as a Skylake-W Xeon, and the miner
-# dies with SIGILL on its first hash.
+# capable as the runner: an AVX-512 builder emits AVX-512, which is an illegal
+# instruction on the ordinary CPUs most operators have, and the node dies with
+# SIGILL on its first hash.
 #
-# Both sdists place -march=native *before* ${CMAKE_CXX_FLAGS}, and CMake seeds
-# that from the environment, so flags exported here land last and GCC honours
-# the last -march. jammy and later pin git refs where this is fixed upstream and
-# so do not carry this block.
+# Exporting CFLAGS/CXXFLAGS is NOT sufficient. pyqrandomx's CMakeLists does
+#     SET(CMAKE_CXX_FLAGS " -pthread")
+# after project(), which discards the environment-seeded flags outright, and
+# only then prepends -march=native. So the override has to sit somewhere CMake
+# cannot overwrite: a compiler wrapper. GCC honours the LAST -march on the
+# command line, so appending it after "$@" wins whatever the project does.
+# /usr/local/bin precedes /usr/bin on PATH. Triplet-prefixed names are wrapped
+# too, because setuptools takes CC from sysconfig as x86_64-linux-gnu-gcc.
+#
+# jammy and later pin git refs where this is fixed upstream and do not need this.
 RUN set -eux; \
     if [ "$(dpkg --print-architecture)" = "amd64" ]; then \
-        if echo 'int main(void){return 0;}' | gcc -march=x86-64-v2 -x c - -o /dev/null 2>/dev/null; then \
+        if echo 'int main(void){return 0;}' | /usr/bin/gcc -march=x86-64-v2 -x c - -o /dev/null 2>/dev/null; then \
             BASELINE=x86-64-v2; \
         else \
             BASELINE=nehalem; \
         fi; \
-        export CFLAGS="-march=${BASELINE} -mtune=generic"; \
-        export CXXFLAGS="${CFLAGS}"; \
-    fi; \
-    git clone --filter=blob:none --no-checkout "${QRL_REPO}" /tmp/QRL \
+        for t in gcc g++ cc c++ x86_64-linux-gnu-gcc x86_64-linux-gnu-g++; do \
+            [ -x "/usr/bin/$t" ] || continue; \
+            printf '#!/bin/sh\nexec /usr/bin/%s "$@" -march=%s -mtune=generic\n' "$t" "${BASELINE}" \
+                > "/usr/local/bin/$t"; \
+            chmod 0755 "/usr/local/bin/$t"; \
+        done; \
+        gcc -v 2>&1 | tail -1; \
+        echo "ISA baseline pinned to ${BASELINE}"; \
+    fi
+
+RUN git clone --filter=blob:none --no-checkout "${QRL_REPO}" /tmp/QRL \
     && git -C /tmp/QRL checkout "${QRL_REF}" -- \
     && echo "recursive-include src/qrl *.yml *.proto *.csv *.json" >> /tmp/QRL/MANIFEST.in \
     && pip install --upgrade pip setuptools wheel \
