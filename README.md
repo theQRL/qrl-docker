@@ -197,8 +197,12 @@ selects them at runtime by CPUID, so a capable CPU uses them anyway.
 `jammy`, `noble` and `resolute` inherit this from their pinned dependencies, where
 it is fixed upstream. `bionic` and `focal` build theQRL/QRL `master`, which
 installs `pyqryptonight` and `pyqrandomx` from PyPI sdists that still compile with
-`-march=native`, so those two Dockerfiles export a portable baseline at build time
-instead. To check any build:
+`-march=native`, so those two Dockerfiles pin the baseline at build time instead.
+They do it with a compiler wrapper rather than by exporting `CFLAGS`/`CXXFLAGS`,
+because `pyqrandomx`'s `CMakeLists.txt` runs `SET(CMAKE_CXX_FLAGS " -pthread")`
+after `project()`, discarding the environment-seeded flags before it prepends
+`-march=native`. A wrapper that appends `-march` after the compiler's own
+arguments wins regardless, since GCC honours the last one. To check any build:
 
 ```bash
 objdump -d _pyqrandomx*.so | grep -cE '^[[:space:]]+[0-9a-f]+:[[:space:]]+62 '
