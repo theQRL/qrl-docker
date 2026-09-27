@@ -194,15 +194,11 @@ from roughly 2009 onward will run them. Nothing is given up in exchange:
 RandomX's vectorised Argon2 implementations are still compiled, and RandomX still
 selects them at runtime by CPUID, so a capable CPU uses them anyway.
 
-`jammy`, `noble` and `resolute` inherit this from their pinned dependencies, where
-it is fixed upstream. `bionic` and `focal` build theQRL/QRL `master`, which
-installs `pyqryptonight` and `pyqrandomx` from PyPI sdists that still compile with
-`-march=native`, so those two Dockerfiles pin the baseline at build time instead.
-They do it with a compiler wrapper rather than by exporting `CFLAGS`/`CXXFLAGS`,
-because `pyqrandomx`'s `CMakeLists.txt` runs `SET(CMAKE_CXX_FLAGS " -pthread")`
-after `project()`, discarding the environment-seeded flags before it prepends
-`-march=native`. A wrapper that appends `-march` after the compiler's own
-arguments wins regardless, since GCC honours the last one. To check any build:
+Every branch inherits this from its dependencies: `jammy`, `noble` and
+`resolute` from the git refs pinned in `noble-work-in-progress`, and `bionic`
+and `focal` from `pyqrandomx` 0.3.3 and `pyqryptonight` 0.99.12 on PyPI. Older
+releases of those two compiled with `-march=native`, so images built before
+them require AVX-512 regardless of which branch produced them. To check any build:
 
 ```bash
 objdump -d _pyqrandomx*.so | grep -cE '^[[:space:]]+[0-9a-f]+:[[:space:]]+62 '
