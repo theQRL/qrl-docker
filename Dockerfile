@@ -73,42 +73,6 @@ ENV PIP_CONSTRAINT=/etc/pip-constraints.txt
 # dropped from the wheel and the node dies at startup with
 # "FileNotFoundError: .../qrl/core/genesis.yml". Adding the recursive-include
 # restores them. Remove this line once MANIFEST.in is fixed upstream.
-# Portable ISA baseline for the vendored C++ extensions.
-#
-# QRL master takes pyqryptonight and pyqrandomx from PyPI, and those sdists
-# compile with "-march=native", which targets whichever machine does the build.
-# On a CI runner that produces an image that only runs on CPUs at least as
-# capable as the runner: an AVX-512 builder emits AVX-512, which is an illegal
-# instruction on the ordinary CPUs most operators have, and the node dies with
-# SIGILL on its first hash.
-#
-# Exporting CFLAGS/CXXFLAGS is NOT sufficient. pyqrandomx's CMakeLists does
-#     SET(CMAKE_CXX_FLAGS " -pthread")
-# after project(), which discards the environment-seeded flags outright, and
-# only then prepends -march=native. So the override has to sit somewhere CMake
-# cannot overwrite: a compiler wrapper. GCC honours the LAST -march on the
-# command line, so appending it after "$@" wins whatever the project does.
-# /usr/local/bin precedes /usr/bin on PATH. Triplet-prefixed names are wrapped
-# too, because setuptools takes CC from sysconfig as x86_64-linux-gnu-gcc.
-#
-# jammy and later pin git refs where this is fixed upstream and do not need this.
-RUN set -eux; \
-    if [ "$(dpkg --print-architecture)" = "amd64" ]; then \
-        if echo 'int main(void){return 0;}' | /usr/bin/gcc -march=x86-64-v2 -x c - -o /dev/null 2>/dev/null; then \
-            BASELINE=x86-64-v2; \
-        else \
-            BASELINE=nehalem; \
-        fi; \
-        for t in gcc g++ cc c++ x86_64-linux-gnu-gcc x86_64-linux-gnu-g++; do \
-            [ -x "/usr/bin/$t" ] || continue; \
-            printf '#!/bin/sh\nexec /usr/bin/%s "$@" -march=%s -mtune=generic\n' "$t" "${BASELINE}" \
-                > "/usr/local/bin/$t"; \
-            chmod 0755 "/usr/local/bin/$t"; \
-        done; \
-        gcc -v 2>&1 | tail -1; \
-        echo "ISA baseline pinned to ${BASELINE}"; \
-    fi
-
 RUN git clone --filter=blob:none --no-checkout "${QRL_REPO}" /tmp/QRL \
     && git -C /tmp/QRL checkout "${QRL_REF}" -- \
     && echo "recursive-include src/qrl *.yml *.proto *.csv *.json" >> /tmp/QRL/MANIFEST.in \
