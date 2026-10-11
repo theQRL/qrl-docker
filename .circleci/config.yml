@@ -142,11 +142,15 @@ workflows:
       - manifest:
           requires: [build_amd64, build_arm64]
           filters: {branches: {ignore: [master, gh-pages]}}
+  # Rebuild every distro branch weekly, so each image picks up Ubuntu base-image
+  # security updates and the current QRL_REF even when nothing here changes.
+  # The schedule fires once per listed branch, using that branch's own config;
+  # a new distro branch must be added here (on every branch) to be rebuilt.
   weekly:
     triggers:
       - schedule:
           cron: "0 3 * * 1"
-          filters: {branches: {only: [<< pipeline.parameters.latest_branch >>]}}
+          filters: {branches: {only: [bionic, focal, jammy, noble, resolute]}}
     jobs:
       - build:
           name: build_amd64
