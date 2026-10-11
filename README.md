@@ -555,7 +555,7 @@ funds, so nothing is lost by discarding `data/`.
 - Expose only 19000 and 19009. The admin, mining and wallet APIs have no
   authentication — anything that can reach them can control the node.
 - Rebuild periodically to pick up Ubuntu security updates for the base image.
-  CI rebuilds the `:latest` branch weekly for this reason.
+  CI rebuilds every distro tag weekly (Mondays, 03:00 UTC) for this reason.
 
 ## Multi-architecture builds
 
